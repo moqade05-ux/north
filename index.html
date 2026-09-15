@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NorthPeak decision study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;450;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#fffefb;
+  --panel:#f5f3ee;
+  --panel2:#ecebe4;
+  --ink:#1b1b19;
+  --muted:#6f6e68;
+  --rule:#dedbd3;
+  --pick:#2c5d8f;
+  --pickbg:#eef3f9;
+  --urgent:#a6321f;
+  --maxw:44rem;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:Inter,system-ui,-apple-system,"Segoe UI",sans-serif;
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;
+}
+.wrap{max-width:var(--maxw);margin:0 auto;padding:0 1.25rem 5rem}
+.page{display:none}
+.page.active{display:block;animation:in .22s ease-out}
+@keyframes in{from{opacity:0}to{opacity:1}}
+
+.prog{
+  position:sticky;top:0;z-index:30;background:var(--paper);
+  padding:1rem 0 .75rem;border-bottom:1px solid var(--rule);margin-bottom:2rem;
+  display:flex;align-items:center;gap:.75rem;font-size:.8125rem;color:var(--muted);
+}
+.prog .bar{flex:1;height:3px;background:var(--panel2);overflow:hidden}
+.prog .fill{height:100%;background:var(--ink);width:20%;transition:width .3s ease}
+.prog.hidden{display:none}
+
+h1{font-size:1.625rem;line-height:1.22;font-weight:600;letter-spacing:-.012em;margin:.5rem 0 1rem}
+h2{font-size:1.0625rem;font-weight:600;margin:2.5rem 0 .625rem}
+p{margin:0 0 1rem;max-width:36rem}
+.lede{color:var(--muted);font-size:1.0625rem;line-height:1.6}
+
+.q{padding:2rem 0;border-top:1px solid var(--rule)}
+.q:first-of-type{border-top:none;padding-top:.5rem}
+.qtext{font-weight:500;margin:0 0 .875rem;max-width:36rem;font-size:1.0625rem}
+.qnote{color:var(--muted);font-weight:400;font-size:.9375rem}
+
+.opts{display:flex;flex-direction:column;gap:.25rem;max-width:34rem}
+.opt{
+  display:flex;align-items:flex-start;gap:.75rem;cursor:pointer;
+  padding:.625rem .875rem;border:1px solid var(--rule);background:var(--paper);
+  transition:border-color .12s,background .12s;
+}
+.opt:hover{border-color:#bfbcb2;background:var(--panel)}
+.opt input{margin:.3rem 0 0;flex:none;width:1.05rem;height:1.05rem;accent-color:var(--pick);cursor:pointer}
+.opt span{flex:1}
+.opt.on{border-color:var(--pick);background:var(--pickbg)}
+.opt.on span{font-weight:500}
+
+.scale{display:flex;gap:.375rem;max-width:34rem;margin-top:.25rem}
+.scale label{
+  flex:1;text-align:center;cursor:pointer;padding:.625rem .25rem;
+  border:1px solid var(--rule);background:var(--paper);position:relative;
+  transition:border-color .12s,background .12s;
+}
+.scale label:hover{border-color:#bfbcb2;background:var(--panel)}
+.scale label.on{border-color:var(--pick);background:var(--pickbg);font-weight:600}
+.scale input{position:absolute;opacity:0;width:1px;height:1px}
+.scale .n{display:block;font-variant-numeric:tabular-nums;font-size:.9375rem}
+.ends{display:flex;justify-content:space-between;max-width:34rem;margin-top:.5rem;font-size:.8125rem;color:var(--muted)}
+
+.legend{font-size:.875rem;color:var(--muted);margin:0 0 .75rem}
+.matrix{width:100%;border-collapse:collapse;margin-top:.25rem;font-size:.9375rem}
+.matrix th{font-weight:400;color:var(--muted);font-size:.78rem;line-height:1.25;padding:0 .2rem .625rem;text-align:center;vertical-align:bottom}
+.matrix th:first-child{width:36%}
+.matrix tbody tr{border-top:1px solid var(--rule)}
+.matrix tbody tr:hover{background:var(--panel)}
+.matrix tbody tr.done{background:var(--pickbg)}
+.matrix td{padding:.75rem .2rem;text-align:center}
+.matrix td:first-child{text-align:left;padding-right:.875rem;line-height:1.45}
+.matrix input{width:1.1rem;height:1.1rem;accent-color:var(--pick);cursor:pointer}
+.matrix .mnum{display:none}
+
+@media(max-width:680px){
+  .matrix thead{display:none}
+  .matrix,.matrix tbody,.matrix td{display:block;width:100%}
+  .matrix tbody tr{display:flex;flex-wrap:wrap;gap:.3rem;border:1px solid var(--rule);margin-bottom:.625rem;padding:.875rem}
+  .matrix td{padding:0;text-align:left}
+  .matrix td:first-child{flex:0 0 100%;margin-bottom:.625rem;font-weight:450;padding-right:0}
+  .matrix td:not(:first-child){flex:1;text-align:center;border:1px solid var(--rule);padding:.5rem .15rem}
+  .matrix .mnum{display:block;font-size:.75rem;color:var(--muted);margin-top:.2rem;font-variant-numeric:tabular-nums}
+  .scale label{padding:.75rem .15rem}
+  .ends{font-size:.75rem}
+}
+
+.stim{font-family:"Source Serif 4",Georgia,serif;font-size:1.0625rem;line-height:1.66}
+.stim p{max-width:34rem}
+.marketnote{background:var(--panel);padding:1.125rem 1.25rem;margin:0 0 1.75rem}
+.marketnote .mlabel{font-family:Inter,sans-serif;font-size:.75rem;letter-spacing:.05em;color:var(--muted);margin-bottom:.4rem}
+.marketnote p{margin:0;font-size:1rem}
+.stim h3{font-family:Inter,sans-serif;font-size:1.0625rem;font-weight:600;margin:1.75rem 0 .875rem}
+table.plans{width:100%;border-collapse:collapse;margin:1.5rem 0 0;font-family:Inter,sans-serif;font-size:.875rem;line-height:1.4}
+table.plans th{text-align:left;font-weight:600;padding:.625rem .5rem;border-bottom:1.5px solid var(--ink);vertical-align:bottom;font-size:.8125rem}
+table.plans td{padding:.6875rem .5rem;border-bottom:1px solid var(--rule);vertical-align:top}
+table.plans tbody tr:hover{background:var(--panel)}
+table.plans td:first-child,table.plans th:first-child{width:3.25rem;font-weight:600}
+@media(max-width:680px){table.plans{font-size:.8125rem}table.plans th,table.plans td{padding:.5rem .3rem}}
+
+.timerbar{
+  position:sticky;top:0;z-index:40;background:var(--paper);
+  border-bottom:1px solid var(--rule);padding:.875rem 0;margin-bottom:1.75rem;
+  display:flex;align-items:baseline;gap:.75rem;
+}
+.timerbar .clock{font-variant-numeric:tabular-nums;font-size:1.875rem;font-weight:600;letter-spacing:-.025em;line-height:1}
+.timerbar .tlabel{color:var(--muted);font-size:.875rem}
+.timerbar.low .clock,.timerbar.low .tlabel{color:var(--urgent)}
+
+ol.steps{margin:0 0 1.25rem;padding-left:1.375rem;max-width:36rem}
+ol.steps li{margin-bottom:.625rem;padding-left:.25rem}
+.codebox{
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  font-size:1.75rem;letter-spacing:.14em;font-weight:600;
+  background:var(--panel);padding:.875rem 1.25rem;display:inline-block;margin:.25rem 0 .5rem;
+}
+.copybtn{font:inherit;font-size:.875rem;background:none;border:1px solid var(--rule);padding:.4rem .75rem;cursor:pointer;margin-left:.5rem;vertical-align:middle}
+.copybtn:hover{background:var(--panel)}
+a{color:var(--pick);text-underline-offset:2px}
+
+.nav{margin-top:2.5rem;padding-top:1.5rem;border-top:1px solid var(--rule)}
+button.next{
+  font:inherit;font-weight:500;font-size:1rem;background:var(--ink);color:var(--paper);
+  border:none;padding:.8125rem 1.875rem;cursor:pointer;transition:background .12s;
+}
+button.next:hover{background:#000}
+button.next:disabled{background:var(--muted);cursor:not-allowed}
+:focus-visible{outline:2px solid var(--pick);outline-offset:2px}
+
+.err{color:var(--urgent);font-size:.9375rem;margin-top:.75rem;display:none}
+.err.show{display:block}
+.status{color:var(--muted);font-size:.9375rem;margin-top:1rem}
+.done-note{background:var(--panel);padding:1.25rem;margin-top:2rem}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<div class="prog hidden" id="prog">
+  <span id="progLabel">Page 1 of 5</span>
+  <span class="bar"><span class="fill" id="progFill"></span></span>
+</div>
+
+<div class="wrap">
+
+<!-- ================= PAGE 1 ================= -->
+<section class="page active" id="p1">
+  <h1>Business decisions made with help from AI</h1>
+  <p class="lede">This study is part of a Master's thesis at Nova SBE. It takes about 15 minutes. Please do it in one sitting on a computer and keep this tab open.</p>
+  <p class="lede">Participation is voluntary and anonymous, and you can stop at any time. Some details are explained at the end.</p>
+
+  <div class="q">
+    <p class="qtext">I agree to take part.</p>
+    <div class="opts" id="consent"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">How much do you agree with the following?</p>
+    <table class="matrix" id="gaais"></table>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Main occupation</p>
+    <div class="opts" id="occupation"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Have you managed people or a budget at work?</p>
+    <div class="opts" id="managed"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Have you been involved in a hiring decision or in choosing a supplier or software tool at work?</p>
+    <div class="opts" id="hiring"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">How often do you use AI chat tools (e.g. ChatGPT, Claude, Gemini)?</p>
+    <div class="opts" id="aifreq"></div>
+  </div>
+
+  <div class="nav">
+    <p>Next you'll make a business decision. You have 3 minutes; the page moves on automatically. Please don't use other AI tools during this study.</p>
+    <button class="next" data-goto="p2">Start the decision</button>
+    <p class="err" id="e1">Please answer the consent question to continue.</p>
+  </div>
+</section>
+
+<!-- ================= PAGE 2 (TIMED) ================= -->
+<section class="page" id="p2">
+  <div class="timerbar" id="timerbar">
+    <span class="clock" id="clock">3:00</span>
+    <span class="tlabel" id="tlabel">left on this page</span>
+  </div>
+
+  <div class="stim" id="stim2"></div>
+
+  <div class="q">
+    <p class="qtext">Which plan do you choose?</p>
+    <div class="opts" id="planPre"></div>
+  </div>
+
+  <div class="nav">
+    <button class="next" data-goto="p3">Continue</button>
+  </div>
+</section>
+
+<!-- ================= PAGE 3 ================= -->
+<section class="page" id="p3">
+  <div class="q">
+    <p class="qtext">How confident are you in your choice?</p>
+    <div id="confPre"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">What did you take into account? <span class="qnote">(select all that apply)</span></p>
+    <div class="opts" id="considered"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">What did the CEO ask you to do?</p>
+    <div class="opts" id="ceoBrief"></div>
+  </div>
+
+  <div class="nav">
+    <button class="next" data-goto="p4">Continue</button>
+  </div>
+</section>
+
+<!-- ================= PAGE 4 (ADVISOR) ================= -->
+<section class="page" id="p4">
+  <h1>Now talk your decision through with an AI advisor.</h1>
+
+  <ol class="steps">
+    <li>Open the advisor in a new tab: <a id="advisorLink" href="#" target="_blank" rel="noopener">open the advisor</a></li>
+    <li>Start the chat by pasting your code:
+      <div><span class="codebox" id="pcode">------</span><button class="copybtn" id="copyCode" type="button">Copy</button></div>
+    </li>
+    <li>The advisor can talk your decision through with you, but it won't tell you which plan to pick or do the calculations for you. The final decision is yours.</li>
+    <li>Please only use the advisor linked here, not other AI tools.</li>
+    <li>Send at least 3 messages (up to 12) and chat for up to 10 minutes. You can keep your choice or change your mind.</li>
+    <li>Come back to this tab and continue below.</li>
+  </ol>
+
+  <h2>The problem, for reference</h2>
+  <div class="stim" id="stim4"></div>
+
+  <div class="nav">
+    <button class="next" data-goto="p5">I've finished with the advisor</button>
+  </div>
+</section>
+
+<!-- ================= PAGE 5 (POST) ================= -->
+<section class="page" id="p5">
+  <div class="q">
+    <p class="qtext">Did you chat with the advisor?</p>
+    <div class="opts" id="chatted"></div>
+  </div>
+
+  <div class="q">
+    <div class="stim" id="stim5"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Now, which plan do you choose?</p>
+    <div class="opts" id="planPost"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">How confident are you in your choice?</p>
+    <div id="confPost"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">During the chat, did you work out the monthly cost of any plan?</p>
+    <div class="opts" id="workedOut"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">How the advisor behaved</p>
+    <p class="legend">1 = Strongly disagree, 7 = Strongly agree</p>
+    <table class="matrix" id="behaved"></table>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Did the advisor tell you directly which plan was the cheapest?</p>
+    <div class="opts" id="toldCheapest"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Trust</p>
+    <p class="legend">1 = Strongly disagree, 7 = Strongly agree</p>
+    <table class="matrix" id="trust"></table>
+  </div>
+
+  <div class="q">
+    <p class="qtext">The advisor's motives</p>
+    <p class="legend">1 = Strongly disagree, 7 = Strongly agree</p>
+    <table class="matrix" id="motives"></table>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Overall</p>
+    <p class="legend">1 = Strongly disagree, 7 = Strongly agree</p>
+    <table class="matrix" id="overall"></table>
+  </div>
+
+  <div class="q">
+    <p class="qtext">Did you use anything during the timed decision or the chat? <span class="qnote">(Any answer is fine, please be honest. Select all.)</span></p>
+    <div class="opts" id="toolsUsed"></div>
+  </div>
+
+  <div class="q">
+    <p class="qtext">How much did the time limit affect your first choice?</p>
+    <div id="timeEffect"></div>
+  </div>
+
+  <div class="nav">
+    <button class="next" id="submitBtn">Submit and finish</button>
+    <p class="status" id="sendStatus"></p>
+  </div>
+</section>
+
+<!-- ================= DEBRIEF ================= -->
+<section class="page" id="p6">
+  <h1>Thank you</h1>
+  <p>You were randomly assigned to one of two AI advisors: one was set up to support whatever plan you chose, the other to question choices that didn't meet the CEO's brief.</p>
+  <p>NorthPeak and the plans' numbers were invented for this study. The Klarna note is real.</p>
+  <p>The cheapest plan is B ($4,400/month). It can't take 50 of the tickets, but those add only $1,250.</p>
+  <div class="done-note">
+    <p style="margin:0">Please don't share this with anyone who might take part. You can close this tab now.</p>
+  </div>
+  <p class="status" id="finalStatus"></p>
+</section>
+
+</div>
+
+<script>
+/* ==========================================================
+   CONFIG — edit these lines only
+   ========================================================== */
+const CONFIG = {
+  ENDPOINT: "https://script.google.com/macros/s/AKfycbwnHk9LtU4C6h-Am59O-Up8rsvpwoYl72XQgZ7yXWE-6mr0_pFxLC5bQqTgOnbIFuUCmw/exec",
+  ADVISOR_URL_VALIDATING: "https://example.com/validating-advisor",
+  ADVISOR_URL_CHALLENGING: "https://example.com/challenging-advisor",
+  DECISION_SECONDS: 180
+};
+
+/* ==========================================================
+   State
+   ========================================================== */
+const D = {};
+D.participant_code = Array.from({length:6},()=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[Math.floor(Math.random()*32)]).join("");
+D.arm = Math.random() < 0.5 ? "validating" : "challenging";
+D.started_at = new Date().toISOString();
+let decisionStart = null, advisorStart = null, timerId = null, submitted = false;
+
+/* ==========================================================
+   Content
+   ========================================================== */
+const AGREE5 = ["Strongly disagree","Somewhat disagree","Neutral","Somewhat agree","Strongly agree"];
+const AGREE7 = ["1 (Strongly disagree)","2","3 (Somewhat disagree)","4","5","6","7 (Strongly agree)"];
+
+const GAAIS = [
+  ["gaais_pos1","I am impressed by what Artificial Intelligence can do."],
+  ["gaais_neg1","I think artificially intelligent systems make many errors."],
+  ["gaais_pos2","There are many beneficial applications of Artificial Intelligence."],
+  ["gaais_neg2","I shiver with discomfort when I think about future uses of Artificial Intelligence."],
+  ["gaais_pos3","I am interested in using artificially intelligent systems in my daily life."],
+  ["gaais_neg3","People like me will suffer if Artificial Intelligence is used more and more."],
+  ["jobs_worry","I worry about AI replacing people's jobs."]
+];
+const BEHAVED = [
+  ["beh_agreed","The advisor agreed with the plan I chose."],
+  ["beh_questioned","The advisor questioned my reasoning."],
+  ["beh_pushed","The advisor pushed me to reconsider my choice."],
+  ["beh_wantedhear","The advisor told me what it thought I wanted to hear."],
+  ["beh_honest","The advisor was honest with me."]
+];
+const TRUST = [
+  ["trust_competent","The advisor is competent at helping with a decision like this."],
+  ["trust_understood","The advisor understood the options well."],
+  ["trust_expertise","The advisor has the expertise to judge this kind of decision."],
+  ["trust_secure","I feel secure about relying on this advisor for my decision."],
+  ["trust_comfortable","I feel comfortable relying on this advisor."],
+  ["attention_check","For this row, please select \u201CSomewhat disagree\u201D."],
+  ["trust_content","I feel content about relying on this advisor."]
+];
+const MOTIVES = [
+  ["mot_likeitself","I felt the advisor was leaning towards options like itself, meaning AI-based options."],
+  ["mot_ownkind","The advisor seemed to be promoting its own kind of solution."],
+  ["mot_stake","The advisor had a stake in which plan I chose."],
+  ["mot_favourpeople","The advisor seemed to favour options with people over AI options."]
+];
+const OVERALL = [
+  ["ov_warm","The advisor was warm and friendly."],
+  ["ov_pleasant","The advisor was pleasant to interact with."],
+  ["ov_respected","The advisor respected what mattered to me."],
+  ["ov_satisfied","Overall, I am satisfied with the advisor."],
+  ["ov_woulduse","I would use an advisor like this for a real business decision."]
+];
+const PLANS = [
+  ["A","AI Assistant, Basic","$500","72%","1,200"],
+  ["B","AI Assistant, Pro","$600","88%","850"],
+  ["C","AI Assistant, Pro + part-time escalation contractor","$3,200","92%","950"],
+  ["D","Full-time support hire","$4,400","96%","1,000"],
+  ["E","Senior specialist team","$2,300","98%","800"]
+];
+
+function stimulusHTML(){
+  return `
+  <div class="marketnote">
+    <div class="mlabel">Market note</div>
+    <p>In 2024, the fintech company Klarna said its AI assistant was doing the work of about 700 customer-service agents. In May 2025, its CEO said that focusing too much on cost had lowered quality, and Klarna began hiring human agents again.</p>
+  </div>
+  <h3>The decision</h3>
+  <p>You're the hiring manager at NorthPeak Software, setting up a new customer-support team that will receive <strong>900 tickets per month</strong>.</p>
+  <p>The CEO's brief: choose the plan that will cost NorthPeak the least per month.</p>
+  <p>Every ticket that isn't resolved the first time means $25 in refunds and staff time. A plan can't take on more tickets than its monthly maximum; any tickets above it go unresolved.</p>
+  <p>You can choose <strong>one</strong> plan.</p>
+  <table class="plans">
+    <thead><tr><th>Plan</th><th>What's included</th><th>Monthly fee</th><th>Resolved first time</th><th>Max tickets per month</th></tr></thead>
+    <tbody>${PLANS.map(r=>`<tr><td>${r[0]}</td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td><td>${r[4]}</td></tr>`).join("")}</tbody>
+  </table>`;
+}
+
+/* ==========================================================
+   Builders
+   ========================================================== */
+const esc = s => s.replace(/"/g,"&quot;");
+
+function radios(hostId,name,options){
+  document.getElementById(hostId).innerHTML = options.map(o=>
+    `<label class="opt"><input type="radio" name="${name}" value="${esc(o)}"><span>${o}</span></label>`
+  ).join("");
+}
+function checks(hostId,name,options){
+  document.getElementById(hostId).innerHTML = options.map(o=>
+    `<label class="opt"><input type="checkbox" name="${name}" value="${esc(o)}"><span>${o}</span></label>`
+  ).join("");
+}
+function scale7(hostId,name,lowLabel,highLabel){
+  const boxes = Array.from({length:7},(_,i)=>
+    `<label><input type="radio" name="${name}" value="${i+1}" aria-label="${i+1}"><span class="n">${i+1}</span></label>`
+  ).join("");
+  document.getElementById(hostId).innerHTML =
+    `<div class="scale">${boxes}</div><div class="ends"><span>${lowLabel}</span><span>${highLabel}</span></div>`;
+}
+function matrix(hostId,rows,scale){
+  const head = `<thead><tr><th></th>${scale.map(s=>`<th>${s}</th>`).join("")}</tr></thead>`;
+  const body = `<tbody>${rows.map(([key,label])=>
+    `<tr><td>${label}</td>${scale.map((s,i)=>
+      `<td><input type="radio" name="${key}" value="${i+1}" aria-label="${esc(label)} — ${esc(s)}"><span class="mnum">${i+1}</span></td>`
+    ).join("")}</tr>`).join("")}</tbody>`;
+  document.getElementById(hostId).innerHTML = head+body;
+}
+function shuffle(a){const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+
+/* ---- build ---- */
+radios("consent","consent",["Yes","No"]);
+matrix("gaais",GAAIS,AGREE5);
+radios("occupation","occupation",["Student","Employed","Self-employed","Not currently working","Other"]);
+radios("managed","managed_people_budget",["No","Under 2 years","2–5 years","Over 5 years"]);
+radios("hiring","hiring_or_supplier_decision",["Yes","No"]);
+radios("aifreq","ai_tool_frequency",["Never","Less than monthly","Monthly","Weekly","Daily"]);
+
+document.getElementById("stim2").innerHTML = stimulusHTML();
+document.getElementById("stim4").innerHTML = stimulusHTML();
+document.getElementById("stim5").innerHTML = stimulusHTML();
+
+radios("planPre","plan_pre",["A","B","C","D","E"]);
+scale7("confPre","confidence_pre","Not at all confident","Completely confident");
+checks("considered","considered",[
+  "The monthly fees","The resolution rates","The maximum tickets per month",
+  "The market note about Klarna","Whether the plan uses people or AI","Mostly gut feeling"
+]);
+radios("ceoBrief","ceo_brief",shuffle([
+  "Choose the plan that costs NorthPeak the least per month",
+  "Choose the plan with the lowest monthly fee",
+  "Choose the plan that resolves the most tickets",
+  "Choose the plan that keeps people on the team",
+  "I don't remember"
+]));
+
+radios("chatted","chatted_with_advisor",["Yes","I opened it but didn't chat","No"]);
+radios("planPost","plan_post",["A","B","C","D","E"]);
+scale7("confPost","confidence_post","Not at all confident","Completely confident");
+radios("workedOut","worked_out_cost",["No","Yes, for my plan only","Yes, for two or three plans","Yes, for all five"]);
+matrix("behaved",BEHAVED,AGREE7);
+radios("toldCheapest","told_cheapest",["Yes","No","Not sure"]);
+matrix("trust",TRUST,AGREE7);
+matrix("motives",MOTIVES,AGREE7);
+matrix("overall",OVERALL,AGREE7);
+checks("toolsUsed","tools_used",["Nothing","Pen and paper","Calculator","Spreadsheet","Another AI tool"]);
+scale7("timeEffect","time_limit_effect","Not at all","Very much");
+
+document.getElementById("pcode").textContent = D.participant_code;
+const advisorURL = (D.arm==="validating"?CONFIG.ADVISOR_URL_VALIDATING:CONFIG.ADVISOR_URL_CHALLENGING)
+  .replace("{ARM}",D.arm).replace("{CODE}",D.participant_code);
+document.getElementById("advisorLink").href = advisorURL;
+
+document.getElementById("copyCode").addEventListener("click",function(){
+  const btn = this;
+  const done = ()=>{ btn.textContent="Copied"; setTimeout(()=>{btn.textContent="Copy";},1600); };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(D.participant_code).then(done,done);
+  } else { done(); }
+});
+
+/* ==========================================================
+   Selection feedback
+   ========================================================== */
+document.addEventListener("change",e=>{
+  const el = e.target;
+  if(el.type!=="radio" && el.type!=="checkbox") return;
+
+  const row = el.closest(".opt");
+  if(row){
+    if(el.type==="radio"){
+      document.querySelectorAll(`input[name="${el.name}"]`).forEach(i=>{
+        const r = i.closest(".opt"); if(r) r.classList.remove("on");
+      });
+    }
+    row.classList.toggle("on", el.checked);
+  }
+
+  const sc = el.closest(".scale");
+  if(sc){
+    sc.querySelectorAll("label").forEach(l=>l.classList.remove("on"));
+    el.closest("label").classList.add("on");
+  }
+
+  const tr = el.closest("tr");
+  if(tr && tr.closest(".matrix")) tr.classList.add("done");
+});
+
+/* ==========================================================
+   Progress
+   ========================================================== */
+const ORDER = ["p1","p2","p3","p4","p5"];
+function setProgress(id){
+  const prog = document.getElementById("prog");
+  const i = ORDER.indexOf(id);
+  if(i === -1){ prog.classList.add("hidden"); return; }
+  prog.classList.toggle("hidden", id==="p2");
+  document.getElementById("progLabel").textContent = "Page "+(i+1)+" of 5";
+  document.getElementById("progFill").style.width = ((i+1)/5*100)+"%";
+}
+
+/* ==========================================================
+   Collecting
+   ========================================================== */
+function readRadio(name){
+  const el = document.querySelector(`input[name="${name}"]:checked`);
+  return el ? el.value : "";
+}
+function readChecks(name){
+  return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(e=>e.value).join("; ");
+}
+function collectPage(page){
+  const names = new Set();
+  page.querySelectorAll("input[name]").forEach(i=>names.add(i.name));
+  names.forEach(n=>{
+    const isCheck = page.querySelector(`input[name="${n}"]`).type === "checkbox";
+    D[n] = isCheck ? readChecks(n) : readRadio(n);
+  });
+}
+
+/* ==========================================================
+   Navigation
+   ========================================================== */
+function show(id){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+  setProgress(id);
+  window.scrollTo(0,0);
+  if(id==="p2") startTimer();
+  if(id==="p4") advisorStart = Date.now();
+  if(id==="p5" && advisorStart) D.seconds_on_advisor_page = Math.round((Date.now()-advisorStart)/1000);
+}
+
+document.querySelectorAll("button.next[data-goto]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const page = btn.closest(".page");
+
+    if(page.id==="p1"){
+      const c = readRadio("consent");
+      if(!c){ document.getElementById("e1").classList.add("show"); return; }
+      collectPage(page);
+      if(c==="No"){
+        submitted = true;
+        document.getElementById("prog").classList.add("hidden");
+        document.getElementById("p6").innerHTML =
+          "<h1>Thank you</h1><p>You chose not to take part. You can close this tab.</p>";
+        show("p6");
+        return;
+      }
+      show("p2"); return;
+    }
+
+    if(page.id==="p2"){ finishDecisionPage("answered"); return; }
+
+    collectPage(page);
+    show(btn.dataset.goto);
+  });
+});
+
+/* ==========================================================
+   Timed decision page
+   ========================================================== */
+function startTimer(){
+  if(timerId) return;
+  decisionStart = Date.now();
+  let left = CONFIG.DECISION_SECONDS;
+  const clock = document.getElementById("clock");
+  const bar = document.getElementById("timerbar");
+  const lab = document.getElementById("tlabel");
+  const render = ()=>{
+    clock.textContent = Math.floor(left/60)+":"+String(left%60).padStart(2,"0");
+    const low = left<=30;
+    bar.classList.toggle("low", low);
+    lab.textContent = low ? "make your choice now" : "left on this page";
+  };
+  render();
+  timerId = setInterval(()=>{
+    left--;
+    render();
+    if(left<=0) finishDecisionPage("timeout");
+  },1000);
+}
+
+function finishDecisionPage(reason){
+  if(timerId){ clearInterval(timerId); timerId = null; }
+  D.seconds_on_decision = decisionStart ? Math.round((Date.now()-decisionStart)/1000) : "";
+  const chosen = readRadio("plan_pre");
+  D.plan_pre = chosen || "no choice";
+  D.decision_page_ended_by = reason;
+  show("p3");
+}
+
+/* ==========================================================
+   Submit
+   ========================================================== */
+document.getElementById("submitBtn").addEventListener("click",async ()=>{
+  const btn = document.getElementById("submitBtn");
+  const status = document.getElementById("sendStatus");
+  collectPage(document.getElementById("p5"));
+  D.finished_at = new Date().toISOString();
+
+  btn.disabled = true;
+  status.textContent = "Saving your responses…";
+
+  try{
+    await fetch(CONFIG.ENDPOINT,{
+      method:"POST", mode:"no-cors",
+      headers:{"Content-Type":"text/plain;charset=utf-8"},
+      body:JSON.stringify(D)
+    });
+    submitted = true;
+    document.getElementById("prog").classList.add("hidden");
+    show("p6");
+    document.getElementById("finalStatus").textContent = "Your responses have been recorded.";
+  }catch(err){
+    btn.disabled = false;
+    status.textContent = "Couldn't save. Check your connection and press the button again.";
+  }
+});
+
+/* Warn before leaving mid-study */
+window.addEventListener("beforeunload",e=>{
+  if(submitted) return;
+  if(document.getElementById("p1").classList.contains("active")) return;
+  e.preventDefault();
+  e.returnValue = "";
+});
+</script>
+</body>
+</html>
